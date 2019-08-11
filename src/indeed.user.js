@@ -2,6 +2,8 @@
 // @name        Indeed.com hide employers/jobs
 // @description Provides an option on Indeed to hide employers/jobs you are uninterested in
 // @include     http*://*indeed.tld/*
+// @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/indeed.user.js
+// @homepageURL     https://github.com/abasau/greasemonkey-scripts
 // @version     1
 // @grant       none
 // ==/UserScript==

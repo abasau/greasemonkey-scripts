@@ -2,6 +2,8 @@
 // @name        apartments.com unlike apartments
 // @description Provides an option on apartments.com to unlike apartments
 // @include     http*://*apartments.tld/*
+// @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/apartments.user.js
+// @homepageURL     https://github.com/abasau/greasemonkey-scripts
 // @version     1
 // @grant       none
 // ==/UserScript==
