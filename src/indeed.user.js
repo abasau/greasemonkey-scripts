@@ -1,11 +1,11 @@
 // ==UserScript==
-// @name        Indeed.com hide employers/jobs
-// @description Provides an option on Indeed to hide employers/jobs you are uninterested in
-// @include     http*://*indeed.tld/*
+// @name            Indeed.com hide employers/jobs
+// @description     Provides an option on Indeed to hide employers/jobs you are uninterested in
+// @include         http*://*indeed.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/indeed.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version     1
-// @grant       none
+// @version         1.1
+// @grant           none
 // ==/UserScript==
 
 var jobId, jobRow;
@@ -50,15 +50,15 @@ function addEditList(parentNode, type, storageProp) {
 
     var editList = document.createElement("div");
     editList.id = "gm-hidden-edit";
-    editList.innerHTML = '\
-        <div style="position: absolute; top: calc(100% + 15px); padding: 15px; background-color: #fff; box-shadow: 1px 1px 5px #bbb; z-index: 2;"> \
-          <div>One per line (text must match exactly)</div> \
-          <textarea rows="5" cols="30">' + localStorage[storageProp] + '</textarea> \
-          <div> \
-            <input type="button" id="gm-hidden-save" value="Save"/> \
-            <input type="button" id="gm-hidden-cancel" value="Cancel"/> \
-          </div> \
-        </div>';
+    editList.innerHTML = `
+        <div style="position: absolute; top: calc(100% + 15px); padding: 15px; background-color: #fff; box-shadow: 1px 1px 5px #bbb; z-index: 2;">
+          <div>One per line (text must match exactly)</div>
+          <textarea rows="5" cols="30">` + localStorage[storageProp] + `</textarea>
+          <div>
+            <input type="button" id="gm-hidden-save" value="Save"/>
+            <input type="button" id="gm-hidden-cancel" value="Cancel"/>
+          </div>
+        </div>`;
 
     this.parentNode.appendChild(editList);
 
