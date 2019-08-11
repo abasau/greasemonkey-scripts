@@ -1,11 +1,11 @@
 // ==UserScript==
-// @name        apartments.com unlike apartments
-// @description Provides an option on apartments.com to unlike apartments
-// @include     http*://*apartments.tld/*
+// @name            apartments.com unlike apartments
+// @description     Provides an option on apartments.com to unlike apartments
+// @include         http*://*apartments.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/apartments.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version     1.1
-// @grant       none
+// @version         1.2
+// @grant           none
 // ==/UserScript==
 
 function runInPageScope(func) {
@@ -51,7 +51,6 @@ function subscribeForResultChanged() {
     };
 
     // ======= addStyles ======= //
-
     var addStyles = function (styles, postfix) {
         var existing = document.getElementById('custom-style');
 
@@ -66,7 +65,6 @@ function subscribeForResultChanged() {
     };
 
     // ======= setUnlikeStyles ======= //
-
     var setUnlikeStyles = function (name, color) {
         var styles = "";
 
