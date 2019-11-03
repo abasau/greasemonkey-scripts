@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name            YouTube.com mass hiding of recommended videos
-// @description     Provides an option on YouTube to mass hide of recommended videos
+// @description     Provides an option on YouTube to mass-hide recommended videos
 // @include         http*://*youtube.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/youtube.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         1.1
+// @version         1.2
 // @grant           none
 // ==/UserScript==
 
@@ -107,7 +107,7 @@ function getElementByText(xpath, parent) {
 }
 
 function addRemoveHidingHandlers(add) {
-    var videos = Array.from(document.querySelectorAll('ytd-grid-video-renderer img'));
+    var videos = Array.from(document.querySelectorAll('ytd-grid-video-renderer .ytd-thumbnail'));
 
     videos.forEach(function (video) {
         if (add) {
