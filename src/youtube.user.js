@@ -4,9 +4,12 @@
 // @include         http*://*youtube.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/youtube.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         1.2
+// @version         1.3.1
 // @grant           none
 // ==/UserScript==
+
+const buttonId = 'hide-on-hover';
+const buttonContainerId = `${buttonId}-container`;
 
 var styles = `
 .switch {
@@ -91,7 +94,7 @@ function createElementFromHTML(htmlString) {
 };
 
 function hideVideo(event) {
-    var parent = event.target.closest('ytd-grid-video-renderer');
+    var parent = event.target.closest('ytd-rich-grid-video-renderer');
 
     var button = parent.querySelector('button#button');
     if (button) button.click();
@@ -107,7 +110,7 @@ function getElementByText(xpath, parent) {
 }
 
 function addRemoveHidingHandlers(add) {
-    var videos = Array.from(document.querySelectorAll('ytd-grid-video-renderer .ytd-thumbnail'));
+    var videos = Array.from(document.querySelectorAll('ytd-rich-grid-renderer ytd-thumbnail'));
 
     videos.forEach(function (video) {
         if (add) {
@@ -121,13 +124,10 @@ function addRemoveHidingHandlers(add) {
 function addHideToggleButton() {
     addRemoveHidingHandlers(false);
 
-    const buttonId = 'hide-on-hover';
-    const buttonContainerId = `${buttonId}-container`;
-
     var existingToggle = document.getElementById(buttonContainerId);
     if (existingToggle) existingToggle.remove();
 
-    var recommendedLabelContainer = document.querySelector('.grid-subheader');
+    var recommendedLabelContainer = document.querySelector('#grid-header');
     if (recommendedLabelContainer) {
         var el = createElementFromHTML(`
         <div id="${buttonContainerId}" style="position:relative;left:85%;top:-15px">
@@ -149,5 +149,13 @@ function addHideToggleButton() {
 addStyles(styles, 'toggle');
 
 window.addEventListener('yt-navigate-finish', addHideToggleButton);
+
+window.addEventListener('yt-action', function(event) {
+  // On loading more recommended videos
+  if (event.detail && event.detail.actionName === 'yt-store-grafted-ve-action') {
+    var existingToggle = document.getElementById(buttonId);
+    addRemoveHidingHandlers(existingToggle && existingToggle.checked);
+  }
+});
 
 addHideToggleButton();
