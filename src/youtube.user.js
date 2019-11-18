@@ -4,7 +4,7 @@
 // @include         http*://*youtube.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/youtube.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         1.3.1
+// @version         1.4
 // @grant           none
 // ==/UserScript==
 
@@ -93,16 +93,33 @@ function createElementFromHTML(htmlString) {
     return div.firstChild;
 };
 
+function enableHidingVideo(event) {
+    var thumbnail = event.target.closest('ytd-thumbnail');
+
+    thumbnail.removeEventListener('mouseleave', temporaryDisableHidingVideo);
+    thumbnail.addEventListener('mouseover', hideVideo);
+}
+
+function temporaryDisableHidingVideo(event) {
+    var thumbnail = event.target.closest('ytd-thumbnail');
+  
+    thumbnail.removeEventListener('mouseover', hideVideo);
+    thumbnail.addEventListener('mouseleave', enableHidingVideo);
+}
+
 function hideVideo(event) {
     var parent = event.target.closest('ytd-rich-grid-video-renderer');
-
+  
     var button = parent.querySelector('button#button');
     if (button) button.click();
 
     setTimeout(function () {
         var link = getElementByText("//yt-formatted-string[contains(text(),'Not interested')]", parent);
-        if (link) link.click();
-    }, 0)
+        if (link) {
+            link.click();
+            setTimeout(function () { temporaryDisableHidingVideo(event); }, 0);
+        }
+    }, 0);
 }
 
 function getElementByText(xpath, parent) {
