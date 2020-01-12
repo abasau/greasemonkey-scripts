@@ -4,7 +4,7 @@
 // @include         http*://*youtube.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/youtube.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         1.4
+// @version         1.5
 // @grant           none
 // ==/UserScript==
 
@@ -134,6 +134,7 @@ function addRemoveHidingHandlers(add) {
             video.addEventListener('mouseover', hideVideo);
         } else {
             video.removeEventListener('mouseover', hideVideo);
+            video.removeEventListener('mouseleave', enableHidingVideo);
         };
     });
 }
@@ -163,16 +164,20 @@ function addHideToggleButton() {
     }
 }
 
+function resetToggleButtonOnNavigation() {
+		window.addEventListener('yt-navigate-finish', addHideToggleButton);
+}
+
+function addRemoveHidingHandlersOnLoadingMoreRecommendedVidoes() {
+    window.addEventListener('yt-action', function(event) {
+      if (event.detail && event.detail.actionName === 'yt-store-grafted-ve-action') {
+        var existingToggle = document.getElementById(buttonId);
+        addRemoveHidingHandlers(existingToggle && existingToggle.checked);
+      }
+    });	
+}
+
 addStyles(styles, 'toggle');
-
-window.addEventListener('yt-navigate-finish', addHideToggleButton);
-
-window.addEventListener('yt-action', function(event) {
-  // On loading more recommended videos
-  if (event.detail && event.detail.actionName === 'yt-store-grafted-ve-action') {
-    var existingToggle = document.getElementById(buttonId);
-    addRemoveHidingHandlers(existingToggle && existingToggle.checked);
-  }
-});
-
+resetToggleButtonOnNavigation();
+addRemoveHidingHandlersOnLoadingMoreRecommendedVidoes();
 addHideToggleButton();
