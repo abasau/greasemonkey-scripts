@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          facebook.com: clean up
-// @include       http*://*facebook.tld/groups/*
+// @include       http*://*facebook.tld/*
 // @downloadURL   https://github.com/abasau/greasemonkey-scripts/raw/master/src/facebook.user.js
 // @homepageURL   https://github.com/abasau/greasemonkey-scripts
 // @version       0.2
@@ -27,5 +27,4 @@ const inviteIntoGroupSelector = "*[data-testid='GROUP_RHC_164489826895912']";
 addStyles(`
 ${commentsSelector}, ${newPostSelector}, ${inviteIntoGroupSelector} {
 	display: none !important;
-}
-`);
+}`);
