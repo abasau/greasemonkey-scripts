@@ -4,7 +4,7 @@
 // @include         http*://*businessinsider.tld/
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/businessinsider.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.1
+// @version         0.2
 // @grant    				none
 // ==/UserScript==
 
@@ -46,22 +46,17 @@ const feedItemTitleClass = "hideable-feed-item-title";
 const hiddenClass = "hidden";
 
 addStyles (`
-    .${feedItemClass} {
-        //color: #999 !important;
-        //background-color: #999 !important;
-    }
-
-    .${feedItemClass}.${hiddenClass} * {
+    .${hiddenClass} * {
         color: #FFF !important;
         background-color: #FFF !important;
     }
 
-    .${feedItemClass}.${hiddenClass} .bi-prime-icon {
+    .${hiddenClass} .bi-prime-icon {
         display: none !important;
     }
 
-    .${feedItemClass}.${hiddenClass} .lazy-holder img {
-        opacity: 0.0;
+    .${hiddenClass} .lazy-holder img {
+        opacity: 0.0 !important;;
     }
 
     #l-rightrail {
@@ -78,21 +73,42 @@ function getFeedItems() {
 
   const items = document.querySelectorAll(`.${feedItemClass}`);
   
-  const data = Array.from(items).map(element => {
-    
-    const prime = !!element.querySelector('.bi-prime-icon');
-    const categoryElement = element.querySelector('.tout-tag-link') || getElementByXpath('./preceding-sibling::*[1]//a[contains(@class, "tout-tag-link")]', element);
-    const category = categoryElement ? categoryElement.innerText : "";
-    const titleLinkElement = element.querySelector(`.${feedItemTitleClass}`);
-    const id = titleLinkElement ? titleLinkElement.href.replace(/[^?]*\//, '').replace(/\?.*/, '') : "";
-    
-    return { prime, category, id, element }
-  });
+  const data = Array.from(items)
+  	.filter(element => (element.clientHeight > 10))
+    .filter(element => (!element.classList.contains(hiddenClass)))
+  	.map(element => {
+      
+      let container, relatedElements;
+      
+      if (element.tagName === 'SECTION') {
+        container = getElementByXpath('./preceding-sibling::*[1]', element);
+        relatedElements = [container];
+      } else {
+        container = element;
+        relatedElements = [];
+      }
+
+	    const primeElement = container.querySelector('.bi-prime-icon');
+      const categoryElement = container.querySelector('.tout-tag-link');
+      
+      const prime = !!primeElement;
+      const category = categoryElement ? categoryElement.innerText : "";
+      const titleLinkElement = element.querySelector(`.${feedItemTitleClass}`);
+      const id = titleLinkElement ? titleLinkElement.href.replace(/[^?]*\//, '').replace(/\?.*/, '') : "";
+      const position = { top: getAbsoluteTopPosition(element), hight: element.clientHeight, width: element.clientWidth };
+
+      return { prime, category, id, position, element, relatedElements };
+    });
   
-  console.log(data);
+  //console.log(data);
   
   return data;
 };
+
+function hideItem(item) {
+  item.element.classList.add(hiddenClass);
+  item.relatedElements.forEach(element => element.classList.add(hiddenClass));
+}
 
 function filterFeedItems(cutOffHight) {
   const storageVariableName = 'hidden-feed-items';
@@ -102,9 +118,9 @@ function filterFeedItems(cutOffHight) {
 
   feedItems.forEach(item => {
     if (hiddenFeedItemIds.includes(item.id)) {
-      item.element.classList.add(hiddenClass);     
-    } else if (item.prime || (getAbsoluteTopPosition(item.element) + item.element.clientHeight) < cutOffHight) {
-      item.element.classList.add(hiddenClass);
+      hideItem(item);     
+    } else if (item.prime || (item.position.top + item.position.hight) < cutOffHight) {
+      hideItem(item);     
       hiddenFeedItemIds.push(item.id);      
     };
   });
