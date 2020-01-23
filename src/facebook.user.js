@@ -3,7 +3,7 @@
 // @include       http*://*facebook.tld/*
 // @downloadURL   https://github.com/abasau/greasemonkey-scripts/raw/master/src/facebook.user.js
 // @homepageURL   https://github.com/abasau/greasemonkey-scripts
-// @version       0.2
+// @version       0.3
 // @grant         none
 // ==/UserScript==
 
