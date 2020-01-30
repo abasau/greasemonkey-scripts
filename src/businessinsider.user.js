@@ -4,7 +4,7 @@
 // @include         http*://*businessinsider.tld/
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/businessinsider.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.3
+// @version         0.4
 // @grant    				none
 // ==/UserScript==
 
@@ -106,7 +106,7 @@ function getFeedItems() {
       return { prime, category, id, position, element, relatedElements };
     });
   
-  //console.log(data);
+  console.log(data);
   
   return data;
 };
@@ -126,11 +126,17 @@ function filterFeedItems(cutOffHight) {
   
   const feedItems = getFeedItems();
   const hiddenFeedItemIds = getFromLocalStorage(storageVariableName) || [];
+  
+  const clientWindowBottomY = window.scrollY + window.innerHeight;
 
   feedItems.forEach(item => {
     if (hiddenFeedItemIds.includes(item.id)) {
-      hideItem(item);
-      removeItem(item);     
+      if (item.position.top > clientWindowBottomY) {
+        hideItem(item);
+        removeItem(item);
+      } else {
+        hideItem(item);
+      }
     } else if (item.prime || (item.position.top + item.position.hight) < cutOffHight) {
       hideItem(item);     
       hiddenFeedItemIds.push(item.id);      
