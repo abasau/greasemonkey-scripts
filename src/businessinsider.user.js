@@ -4,7 +4,7 @@
 // @include         http*://*businessinsider.tld/
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/businessinsider.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.2
+// @version         0.3
 // @grant    				none
 // ==/UserScript==
 
@@ -44,6 +44,7 @@ function saveToLocalStorage (name, value) {
 const feedItemClass = "hideable-feed-item";
 const feedItemTitleClass = "hideable-feed-item-title";
 const hiddenClass = "hidden";
+const removedClass = "remove";
 
 addStyles (`
     .${hiddenClass} * {
@@ -57,6 +58,10 @@ addStyles (`
 
     .${hiddenClass} .lazy-holder img {
         opacity: 0.0 !important;;
+    }
+
+    .${hiddenClass}.${removedClass} {
+        display: none !important;
     }
 
     #l-rightrail {
@@ -76,6 +81,7 @@ function getFeedItems() {
   const data = Array.from(items)
   	.filter(element => (element.clientHeight > 10))
     .filter(element => (!element.classList.contains(hiddenClass)))
+    .filter(element => (!element.classList.contains(removedClass)))
   	.map(element => {
       
       let container, relatedElements;
@@ -110,6 +116,11 @@ function hideItem(item) {
   item.relatedElements.forEach(element => element.classList.add(hiddenClass));
 }
 
+function removeItem(item) {
+  item.element.classList.add(removedClass);
+  item.relatedElements.forEach(element => element.classList.add(removedClass));
+}
+
 function filterFeedItems(cutOffHight) {
   const storageVariableName = 'hidden-feed-items';
   
@@ -118,7 +129,8 @@ function filterFeedItems(cutOffHight) {
 
   feedItems.forEach(item => {
     if (hiddenFeedItemIds.includes(item.id)) {
-      hideItem(item);     
+      hideItem(item);
+      removeItem(item);     
     } else if (item.prime || (item.position.top + item.position.hight) < cutOffHight) {
       hideItem(item);     
       hiddenFeedItemIds.push(item.id);      
