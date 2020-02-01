@@ -4,7 +4,7 @@
 // @include         http*://*businessinsider.tld/
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/businessinsider.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.4
+// @version         0.5
 // @grant    				none
 // ==/UserScript==
 
@@ -22,6 +22,13 @@ function addStyles (styles) {
 
   document.head.appendChild(styleSheet);
 };
+
+function addHtmlToBody (html) {
+  const container = document.createElement('div');
+  container.innerHTML = html.trim();
+
+  document.body.appendChild(container.firstChild);
+}
 
 function getElementByXpath (path, parent) {
   return document.evaluate(path, parent, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
@@ -47,29 +54,91 @@ const hiddenClass = "hidden";
 const removedClass = "remove";
 
 addStyles (`
-    .${hiddenClass} * {
-        color: #FFF !important;
-        background-color: #FFF !important;
-    }
+.${hiddenClass} * {
+  color: #FFF !important;
+  background-color: #FFF !important;
+}
 
-    .${hiddenClass} .bi-prime-icon {
-        display: none !important;
-    }
+.${hiddenClass} .bi-prime-icon {
+	display: none !important;
+}
 
-    .${hiddenClass} .lazy-holder img {
-        opacity: 0.0 !important;;
-    }
+.${hiddenClass} .lazy-holder img {
+	opacity: 0.0 !important;;
+}
 
-    .${hiddenClass}.${removedClass} {
-        display: none !important;
-    }
+.${hiddenClass}.${removedClass} {
+	display: none !important;
+}
 
-    #l-rightrail {
-        display: none !important;
-    }
+#l-rightrail {
+	display: none !important;
+}
+
+.btn-filter {
+  display: inline-block;
+  user-select: none;
+  height: 25px;
+  border-radius: 15px;
+  padding: 0 16px;
+  font-family: LabGrotesque, Helvetica, Arial, sans-serif;
+  font-weight: 900;
+  font-style: normal;
+  font-size: 11px;
+  line-height: 25px;
+  color: #fff;
+  letter-spacing: .6px;
+  background: #007eff;
+  margin-right: 5px;
+  margin-left: 5px;
+}
+
+/* From https://www.w3schools.com/howto/howto_css_modals.asp */
+
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto; /* 15% from the top and centered */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%; /* Could be more or less, depending on screen size */
+}
+
+/* The Close Button */
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 `);
 
 // ===================================== //
+
+const storageVariableName = 'hidden-feed-items';
+const categoryStorageVariableName = 'hidden-feed-categories';
+const titleStorageVariableName = 'hidden-feed-titles';
 
 function getFeedItems() {
   document.querySelectorAll('.tout-copy ol li a').forEach(element => element.classList.add(feedItemTitleClass));
@@ -101,12 +170,13 @@ function getFeedItems() {
       const category = categoryElement ? categoryElement.innerText : "";
       const titleLinkElement = element.querySelector(`.${feedItemTitleClass}`);
       const id = titleLinkElement ? titleLinkElement.href.replace(/[^?]*\//, '').replace(/\?.*/, '') : "";
+      const title = titleLinkElement ? titleLinkElement.innerText.trim() : "";
       const position = { top: getAbsoluteTopPosition(element), hight: element.clientHeight, width: element.clientWidth };
 
-      return { prime, category, id, position, element, relatedElements };
+      return { prime, category, title, id, position, element, relatedElements };
     });
   
-  console.log(data);
+  //console.log(data);
   
   return data;
 };
@@ -122,10 +192,11 @@ function removeItem(item) {
 }
 
 function filterFeedItems(cutOffHight) {
-  const storageVariableName = 'hidden-feed-items';
-  
   const feedItems = getFeedItems();
+  
   const hiddenFeedItemIds = getFromLocalStorage(storageVariableName) || [];
+  const categories = getFromLocalStorage(categoryStorageVariableName) || [];
+  const titles = getFromLocalStorage(titleStorageVariableName) || [];
   
   const clientWindowBottomY = window.scrollY + window.innerHeight;
 
@@ -137,7 +208,10 @@ function filterFeedItems(cutOffHight) {
       } else {
         hideItem(item);
       }
-    } else if (item.prime || (item.position.top + item.position.hight) < cutOffHight) {
+    } else if (item.prime
+               || (item.position.top + item.position.hight) < cutOffHight
+               || categories.some(category => (category.toUpperCase() === item.category.toUpperCase()))
+               || titles.some(title => (item.title.toUpperCase().indexOf(title.toUpperCase()) !== -1))) {
       hideItem(item);     
       hiddenFeedItemIds.push(item.id);      
     };
@@ -156,3 +230,59 @@ function onScroll(event) {
 }
 
 window.addEventListener('scroll', onScroll);
+
+// ============= Filter button and dialog ============== //
+
+addHtmlToBody(`
+<div id="filter-dialog" class="modal">
+
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span id="filter-dialog-close" class="close">&times;</span>
+    <div>
+      <h5>Filter Category</h5>
+      <textarea id="filter-dialog-categories" rows="5" cols="150"></textarea>
+      <h5>Filter Text</h5>
+      <textarea id="filter-dialog-titles" rows="5" cols="150"></textarea>
+    </div>
+  </div>
+
+</div>
+`);
+
+const filterLink = document.createElement("A");
+filterLink.innerText = "Filter";
+filterLink.className = "btn-filter";
+filterLink.href = "javascript:void(0);";
+
+document.querySelector(`header .subscribe-btn`).parentElement.appendChild(filterLink);
+
+const modal = document.getElementById("filter-dialog");
+const closeLink = document.getElementById("filter-dialog-close");
+const filterCategoriesTextArea = document.getElementById("filter-dialog-categories");
+const filterTitlesTextArea = document.getElementById("filter-dialog-titles");
+
+const showModal = function() {
+  const categories = getFromLocalStorage(categoryStorageVariableName) || [];
+  const titles = getFromLocalStorage(titleStorageVariableName) || [];
+  
+  filterCategoriesTextArea.value = categories.join('\n');
+  filterTitlesTextArea.value = titles.join('\n');
+  
+  modal.style.display = "block";
+};
+
+const closeModal = function() {
+  const categories = filterCategoriesTextArea.value.split('\n').filter(v => v);
+  const titles = filterTitlesTextArea.value.split('\n').filter(v => v);
+  
+  saveToLocalStorage(categoryStorageVariableName, categories);
+  saveToLocalStorage(titleStorageVariableName, titles);
+  
+  modal.style.display = "none";
+};
+
+filterLink.onclick = showModal;
+closeLink.onclick = closeModal;
+window.onclick = function(event) { if (event.target == modal) { closeModal(); }; };
+
