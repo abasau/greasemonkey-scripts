@@ -11,3 +11,5 @@ Repository for Greasemonkey scripts
 [Facebook.com](https://github.com/abasau/greasemonkey-scripts/raw/master/src/facebook.user.js)
 
 [BusinessInsider.com](https://github.com/abasau/greasemonkey-scripts/raw/master/src/businessinsider.user.js)
+
+[Finance.yahoo.com](https://github.com/abasau/greasemonkey-scripts/raw/master/src/finance.yahoo.user.js)
