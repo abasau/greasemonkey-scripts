@@ -4,7 +4,7 @@
 // @include         http*://*businessinsider.tld/
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/businessinsider.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.5
+// @version         0.6
 // @grant    				none
 // ==/UserScript==
 
@@ -167,7 +167,7 @@ function getFeedItems() {
       const categoryElement = container.querySelector('.tout-tag-link');
       
       const prime = !!primeElement;
-      const category = categoryElement ? categoryElement.innerText : "";
+      const category = categoryElement ? categoryElement.innerText.trim() : "";
       const titleLinkElement = element.querySelector(`.${feedItemTitleClass}`);
       const id = titleLinkElement ? titleLinkElement.href.replace(/[^?]*\//, '').replace(/\?.*/, '') : "";
       const title = titleLinkElement ? titleLinkElement.innerText.trim() : "";
@@ -285,4 +285,3 @@ const closeModal = function() {
 filterLink.onclick = showModal;
 closeLink.onclick = closeModal;
 window.onclick = function(event) { if (event.target == modal) { closeModal(); }; };
-
