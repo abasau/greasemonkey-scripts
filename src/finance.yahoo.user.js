@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name            finance.yahoo.com improvements
 // @description     Different improvements for finance.yahoo.com
-// @include         http*://*finance.yahoo.tld/chart/*
+// @include         http*://*finance.yahoo.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/finance.yahoo.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.3
+// @version         0.4
 // @grant    				none
 // ==/UserScript==
 
@@ -35,11 +35,15 @@ function addAllLinks() {
   const pathname = window.location.pathname;
   const picker = pathname.split('/').pop();
 
-  const container = document.querySelector('header button').parentElement;
+  const firstHeaderButton = document.querySelector('header button');
+  
+  if (firstHeaderButton) {
+    const container = firstHeaderButton.parentElement;
 
-  removeHeaderLinks();
-  addHeaderLink(container, 'Summary', `/quote/${picker}`);
-  addHeaderLink(container, 'Zack', `https://www.zacks.com/stock/quote/${picker}`);
+    removeHeaderLinks();
+    addHeaderLink(container, 'Summary', `/quote/${picker}`);
+    addHeaderLink(container, 'Zack', `https://www.zacks.com/stock/quote/${picker}`);
+  };
 }
 
 function addLocationChangeEvents() {
