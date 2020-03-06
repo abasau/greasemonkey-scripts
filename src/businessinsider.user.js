@@ -4,7 +4,7 @@
 // @include         http*://*businessinsider.tld/
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/businessinsider.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.6
+// @version         0.7
 // @grant    				none
 // ==/UserScript==
 
@@ -98,7 +98,7 @@ addStyles (`
 .modal {
   display: none; /* Hidden by default */
   position: fixed; /* Stay in place */
-  z-index: 1; /* Sit on top */
+  z-index: 1000; /* Sit on top */
   left: 0;
   top: 0;
   width: 100%; /* Full width */
@@ -212,7 +212,12 @@ function filterFeedItems(cutOffHight) {
                || (item.position.top + item.position.hight) < cutOffHight
                || categories.some(category => (category.toUpperCase() === item.category.toUpperCase()))
                || titles.some(title => (item.title.toUpperCase().indexOf(title.toUpperCase()) !== -1))) {
-      hideItem(item);     
+      if (item.position.top > clientWindowBottomY) {
+        hideItem(item);
+        removeItem(item);
+      } else {
+        hideItem(item);
+      }    
       hiddenFeedItemIds.push(item.id);      
     };
   });
@@ -250,13 +255,6 @@ addHtmlToBody(`
 </div>
 `);
 
-const filterLink = document.createElement("A");
-filterLink.innerText = "Filter";
-filterLink.className = "btn-filter";
-filterLink.href = "javascript:void(0);";
-
-document.querySelector(`header .subscribe-btn`).parentElement.appendChild(filterLink);
-
 const modal = document.getElementById("filter-dialog");
 const closeLink = document.getElementById("filter-dialog-close");
 const filterCategoriesTextArea = document.getElementById("filter-dialog-categories");
@@ -282,6 +280,15 @@ const closeModal = function() {
   modal.style.display = "none";
 };
 
-filterLink.onclick = showModal;
 closeLink.onclick = closeModal;
 window.onclick = function(event) { if (event.target == modal) { closeModal(); }; };
+
+document.querySelectorAll(`header .subscribe-btn`).forEach(element => {
+  const filterLink = document.createElement("A");
+  filterLink.innerText = "Filter";
+  filterLink.className = "btn-filter";
+  filterLink.href = "javascript:void(0);";
+	filterLink.onclick = showModal;
+  
+  element.parentElement.appendChild(filterLink);
+});
