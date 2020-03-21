@@ -4,7 +4,7 @@
 // @include         http*://*youtube.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/youtube.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         1.5
+// @version         1.6
 // @grant           none
 // ==/UserScript==
 
@@ -17,6 +17,7 @@ var styles = `
     display: inline-block;
     width: 40px;
     height: 21px;
+    top: -5px;
   }
   
   .switch input { 
@@ -145,10 +146,10 @@ function addHideToggleButton() {
     var existingToggle = document.getElementById(buttonContainerId);
     if (existingToggle) existingToggle.remove();
 
-    var recommendedLabelContainer = document.querySelector('#grid-header');
+    var recommendedLabelContainer = document.querySelector('#grid-title');
     if (recommendedLabelContainer) {
         var el = createElementFromHTML(`
-        <div id="${buttonContainerId}" style="position:relative;left:85%;top:-15px">
+        <div id="${buttonContainerId}" style="position:relative;left:85%;top:-25px">
             <span class="title style-scope ytd-guide-entry-renderer" style="margin:5px">Hide on Hover</span>
             <label class="switch">
                 <input id="${buttonId}" type="checkbox">
