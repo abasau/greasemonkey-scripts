@@ -4,7 +4,7 @@
 // @include         http*://*businessinsider.tld/
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/businessinsider.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.7
+// @version         0.8
 // @grant    				none
 // ==/UserScript==
 
@@ -225,12 +225,18 @@ function filterFeedItems(cutOffHight) {
   saveToLocalStorage(storageVariableName, hiddenFeedItemIds);
 };
 
+function getWindowHeight() {
+  return document.body.offsetHeight;
+}
+
 let scrollYNext = 0;
+let windowHeight = 0;
 
 function onScroll(event) {
-  if (window.scrollY > scrollYNext) {
+  if (window.scrollY > scrollYNext || getWindowHeight() !== windowHeight) {
     filterFeedItems(scrollYNext - 100);
     scrollYNext += 300;
+    windowHeight = getWindowHeight();
   }
 }
 
@@ -291,4 +297,4 @@ document.querySelectorAll(`header .subscribe-btn`).forEach(element => {
 	filterLink.onclick = showModal;
   
   element.parentElement.appendChild(filterLink);
-});
+})
