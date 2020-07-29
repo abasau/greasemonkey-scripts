@@ -4,7 +4,7 @@
 // @include         http*://*businessinsider.tld/
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/businessinsider.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.8
+// @version         0.9
 // @grant    				none
 // ==/UserScript==
 
@@ -233,9 +233,12 @@ let scrollYNext = 0;
 let windowHeight = 0;
 
 function onScroll(event) {
-  if (window.scrollY > scrollYNext || getWindowHeight() !== windowHeight) {
+  if (window.scrollY > scrollYNext) {
     filterFeedItems(scrollYNext - 100);
     scrollYNext += 300;
+    windowHeight = getWindowHeight();
+  } else if (getWindowHeight() !== windowHeight) {
+    filterFeedItems(scrollYNext - 100);
     windowHeight = getWindowHeight();
   }
 }
@@ -297,4 +300,4 @@ document.querySelectorAll(`header .subscribe-btn`).forEach(element => {
 	filterLink.onclick = showModal;
   
   element.parentElement.appendChild(filterLink);
-})
+});
