@@ -4,7 +4,7 @@
 // @include         http*://*finance.yahoo.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/finance.yahoo.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.4
+// @version         0.5
 // @grant    				none
 // ==/UserScript==
 
@@ -12,6 +12,19 @@ function runInPageScope(func) {
     var script = document.createElement('script');
     script.appendChild(document.createTextNode('(' + func + ')();'));
     (document.body || document.head || document.documentElement).appendChild(script);
+};
+
+function addStyles (styles) {
+  const existing = document.getElementById('custom-style');
+
+  if (existing) existing.remove();
+
+  const styleSheet = document.createElement("style")
+  styleSheet.type = "text/css";
+  styleSheet.innerText = styles;
+  styleSheet.id = 'custom-style';
+
+  document.head.appendChild(styleSheet);
 };
 
 function addHeaderLink(parent, text, url) {
@@ -69,3 +82,9 @@ function addLocationChangeEvents() {
 runInPageScope(addLocationChangeEvents);
 
 window.addEventListener('replacestate', addAllLinks);
+
+addStyles(`
+.gemini-ad, #mrt-node-Lead-1-Ad, #mrt-node-Lead-2-Ad, #mrt-node-Lead-3-Ad, #mrt-node-Lead-4-Ad, #mrt-node-Lead-5-Ad, #mrt-node-Lead-6-Ad, #mrt-node-Lead-7-Ad {
+	display: none !important;
+}
+`);
