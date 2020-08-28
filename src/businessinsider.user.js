@@ -4,7 +4,7 @@
 // @include         http*://*businessinsider.tld/
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/businessinsider.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.9
+// @version         0.10
 // @grant    				none
 // ==/UserScript==
 
@@ -50,8 +50,8 @@ function saveToLocalStorage (name, value) {
 
 const feedItemClass = "hideable-feed-item";
 const feedItemTitleClass = "hideable-feed-item-title";
-const hiddenClass = "hidden";
-const removedClass = "remove";
+const hiddenClass = "hidden-feed-item";
+const removedClass = "removed-feed-item";
 
 addStyles (`
 .${hiddenClass} * {
