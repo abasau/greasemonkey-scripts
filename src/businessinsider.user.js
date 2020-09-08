@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name            businessinsider.com hide articles
 // @description     Hide articles on businessinsider.com
-// @include         http*://*businessinsider.tld/
+// @include         http*://*businessinsider.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/businessinsider.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.10
+// @version         0.11
 // @grant    				none
 // ==/UserScript==
 
@@ -91,6 +91,16 @@ addStyles (`
   background: #007eff;
   margin-right: 5px;
   margin-left: 5px;
+}
+
+/* Hiding modal dialogs */
+
+.tp-backdrop.tp-active, .tp-modal {
+	display: none !important;
+}
+
+body.tp-modal-open {
+	overflow: auto !important;
 }
 
 /* From https://www.w3schools.com/howto/howto_css_modals.asp */
