@@ -2,9 +2,10 @@
 // @name            businessinsider.com hide articles
 // @description     Hide articles on businessinsider.com
 // @include         http*://*businessinsider.tld/*
+// @include         https://www.insider.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/businessinsider.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.11
+// @version         0.12
 // @grant    				none
 // ==/UserScript==
 
