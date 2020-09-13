@@ -4,7 +4,7 @@
 // @include         http*://*youtube.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/youtube.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         1.6
+// @version         1.7
 // @grant           none
 // ==/UserScript==
 
@@ -146,10 +146,10 @@ function addHideToggleButton() {
     var existingToggle = document.getElementById(buttonContainerId);
     if (existingToggle) existingToggle.remove();
 
-    var recommendedLabelContainer = document.querySelector('#grid-title');
+    var recommendedLabelContainer = document.querySelector('#container #center');
     if (recommendedLabelContainer) {
         var el = createElementFromHTML(`
-        <div id="${buttonContainerId}" style="position:relative;left:85%;top:-25px">
+        <div id="${buttonContainerId}">
             <span class="title style-scope ytd-guide-entry-renderer" style="margin:5px">Hide on Hover</span>
             <label class="switch">
                 <input id="${buttonId}" type="checkbox">
@@ -171,7 +171,7 @@ function resetToggleButtonOnNavigation() {
 
 function addRemoveHidingHandlersOnLoadingMoreRecommendedVidoes() {
     window.addEventListener('yt-action', function(event) {
-      if (event.detail && event.detail.actionName === 'yt-store-grafted-ve-action') {
+      if (event.detail && event.detail.actionName === 'yt-append-continuation-items-action') {
         var existingToggle = document.getElementById(buttonId);
         addRemoveHidingHandlers(existingToggle && existingToggle.checked);
       }
