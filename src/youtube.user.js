@@ -4,15 +4,42 @@
 // @include         http*://*youtube.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/youtube.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         1.7
+// @version         1.9
 // @grant           none
 // ==/UserScript==
 
-const buttonId = 'hide-on-hover';
-const buttonContainerId = `${buttonId}-container`;
+// ========================================= //
 
-var styles = `
-.switch {
+function addStyles(styles, postfix) {
+  const existing = document.getElementById('custom-style');
+
+  if (existing) existing.remove();
+
+  const styleSheet = document.createElement("style")
+  styleSheet.type = "text/css";
+  styleSheet.innerText = styles;
+  styleSheet.id = 'custom-style-' + postfix;
+
+  document.head.appendChild(styleSheet);
+}
+
+function createElementFromHTML(htmlString) {
+  const div = document.createElement('div');
+  div.innerHTML = htmlString.trim();
+
+  return div.firstChild;
+}
+
+function getElementByText(xpath, parent) {
+  return document.evaluate(xpath, parent || document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+}
+
+// ========================================= //
+
+const buttonContainerClass = 'switch-container';
+
+const styles = `
+  .switch {
     position: relative;
     display: inline-block;
     width: 40px;
@@ -74,111 +101,127 @@ var styles = `
   }
 `;
 
-var addStyles = function (styles, postfix) {
-    var existing = document.getElementById('custom-style');
-
-    if (existing) existing.remove();
-
-    var styleSheet = document.createElement("style")
-    styleSheet.type = "text/css";
-    styleSheet.innerText = styles;
-    styleSheet.id = 'custom-style-' + postfix;
-
-    document.head.appendChild(styleSheet);
-};
-
-function createElementFromHTML(htmlString) {
-    var div = document.createElement('div');
-    div.innerHTML = htmlString.trim();
-
-    return div.firstChild;
-};
-
 function enableHidingVideo(event) {
-    var thumbnail = event.target.closest('ytd-thumbnail');
+  const thumbnail = event.target.closest('ytd-thumbnail');
 
-    thumbnail.removeEventListener('mouseleave', temporaryDisableHidingVideo);
-    thumbnail.addEventListener('mouseover', hideVideo);
+  thumbnail.removeEventListener('mouseleave', temporaryDisableHidingVideo);
+  thumbnail.addEventListener('mouseover', hideVideo);
 }
 
 function temporaryDisableHidingVideo(event) {
-    var thumbnail = event.target.closest('ytd-thumbnail');
-  
-    thumbnail.removeEventListener('mouseover', hideVideo);
-    thumbnail.addEventListener('mouseleave', enableHidingVideo);
+  const thumbnail = event.target.closest('ytd-thumbnail');
+
+  thumbnail.removeEventListener('mouseover', hideVideo);
+  thumbnail.addEventListener('mouseleave', enableHidingVideo);
+}
+
+function hideContextMenuPopup() {
+  document.querySelector('ytd-popup-container').style.display = 'none';
+}
+
+function restoreContextMenuPopup() {
+  document.querySelector('ytd-popup-container').style.display = 'block';
 }
 
 function hideVideo(event) {
-    var parent = event.target.closest('ytd-rich-grid-video-renderer');
-  
-    var button = parent.querySelector('button#button');
+  return new Promise((resolve, reject) => {
+    hideContextMenuPopup();
+
+    const parent = event.target.closest('ytd-rich-grid-video-renderer');
+
+    const button = parent.querySelector('button#button');
     if (button) button.click();
 
     setTimeout(function () {
-        var link = getElementByText("//yt-formatted-string[contains(text(),'Not interested')]", parent);
-        if (link) {
-            link.click();
-            setTimeout(function () { temporaryDisableHidingVideo(event); }, 0);
-        }
+      const link = getElementByText("//yt-formatted-string[contains(text(),'Not interested')]", parent);
+      if (link) {
+        link.click();
+        setTimeout(function () {
+          temporaryDisableHidingVideo(event);
+          resolve();
+        }, 0);
+      }
+
+      restoreContextMenuPopup();
     }, 0);
+  });
 }
 
-function getElementByText(xpath, parent) {
-    return document.evaluate(xpath, parent || document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+function restoreHidingHandlersOnLoadingMoreRecommendedVidoes(event) {
+  if (event.detail && event.detail.actionName === 'yt-append-continuation-items-action') {
+    addRemoveHidingHandlers(true);
+  }
 }
 
 function addRemoveHidingHandlers(add) {
-    var videos = Array.from(document.querySelectorAll('ytd-rich-grid-renderer ytd-thumbnail'));
+  const videos = document.querySelectorAll('ytd-rich-grid-renderer ytd-thumbnail');
 
-    videos.forEach(function (video) {
-        if (add) {
-            video.addEventListener('mouseover', hideVideo);
-        } else {
-            video.removeEventListener('mouseover', hideVideo);
-            video.removeEventListener('mouseleave', enableHidingVideo);
-        };
-    });
+  videos.forEach(function (video) {
+    if (add) {
+      video.addEventListener('mouseover', hideVideo);
+      window.addEventListener('yt-action', restoreHidingHandlersOnLoadingMoreRecommendedVidoes);
+    } else {
+      video.removeEventListener('mouseover', hideVideo);
+      video.removeEventListener('mouseleave', enableHidingVideo);
+      window.removeEventListener('yt-action', restoreHidingHandlersOnLoadingMoreRecommendedVidoes);
+    };
+  });
 }
 
+function removeAllToogleButtons() {
+  const existingToggles = document.querySelectorAll(`.${buttonContainerClass}`);
+
+  existingToggles.forEach(function (existingToggle) {
+    existingToggle.remove();
+  });
+}
+
+function appendToogleButton(container, label) {
+  const toogleContainer = createElementFromHTML(`
+      <div class="${buttonContainerClass}">
+        <span class="title style-scope ytd-guide-entry-renderer" style="margin:5px">${label}</span>
+        <label class="switch">
+          <input type="checkbox">
+          <span class="slider round"></span>
+        </label>
+      </div>`);
+
+  container.appendChild(toogleContainer);
+
+  return toogleContainer.querySelector('input');
+}
+
+
 function addHideToggleButton() {
-    addRemoveHidingHandlers(false);
+  addRemoveHidingHandlers(false);
+  removeAllToogleButtons();
 
-    var existingToggle = document.getElementById(buttonContainerId);
-    if (existingToggle) existingToggle.remove();
+  const recommendedLabelContainer = document.querySelector('#container #center');
 
-    var recommendedLabelContainer = document.querySelector('#container #center');
-    if (recommendedLabelContainer) {
-        var el = createElementFromHTML(`
-        <div id="${buttonContainerId}">
-            <span class="title style-scope ytd-guide-entry-renderer" style="margin:5px">Hide on Hover</span>
-            <label class="switch">
-                <input id="${buttonId}" type="checkbox">
-                <span class="slider round"></span>
-            </label>
-        </div>`);
+  if (recommendedLabelContainer) {
+    const hideOnHoverButton = appendToogleButton(recommendedLabelContainer, 'Hide on Hover');
 
-        recommendedLabelContainer.appendChild(el);
+    hideOnHoverButton.onclick = function () {
+      addRemoveHidingHandlers(this.checked);
+    };
 
-        document.getElementById(buttonId).onclick = function () {
-            addRemoveHidingHandlers(this.checked);
-        };
-    }
+    const hideAllButton = appendToogleButton(recommendedLabelContainer, 'Hide All');
+
+    hideAllButton.onclick = function () {
+      const videos = Array.from(document.querySelectorAll('ytd-rich-grid-renderer ytd-thumbnail'));
+
+      videos
+        .reduce((p, video) => p.then(() => hideVideo({ target: video })), Promise.resolve())
+        .then(() => this.checked = false);
+    };
+  }
 }
 
 function resetToggleButtonOnNavigation() {
-		window.addEventListener('yt-navigate-finish', addHideToggleButton);
-}
-
-function addRemoveHidingHandlersOnLoadingMoreRecommendedVidoes() {
-    window.addEventListener('yt-action', function(event) {
-      if (event.detail && event.detail.actionName === 'yt-append-continuation-items-action') {
-        var existingToggle = document.getElementById(buttonId);
-        addRemoveHidingHandlers(existingToggle && existingToggle.checked);
-      }
-    });	
+  window.addEventListener('yt-navigate-finish', addHideToggleButton);
 }
 
 addStyles(styles, 'toggle');
+
 resetToggleButtonOnNavigation();
-addRemoveHidingHandlersOnLoadingMoreRecommendedVidoes();
 addHideToggleButton();
