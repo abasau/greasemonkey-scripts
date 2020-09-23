@@ -4,7 +4,7 @@
 // @include         http*://*youtube.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/youtube.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         1.9
+// @version         1.10
 // @grant           none
 // ==/UserScript==
 
@@ -125,21 +125,27 @@ function restoreContextMenuPopup() {
 
 function hideVideo(event) {
   return new Promise((resolve, reject) => {
-    hideContextMenuPopup();
-
-    const parent = event.target.closest('ytd-rich-grid-video-renderer');
-
+    const parent = event.target.closest('ytd-rich-item-renderer');
+    
     const button = parent.querySelector('button#button');
-    if (button) button.click();
-
+    
+    if (button) {
+      hideContextMenuPopup();
+    	button.click();
+    }
+    
     setTimeout(function () {
       const link = getElementByText("//yt-formatted-string[contains(text(),'Not interested')]", parent);
+      
       if (link) {
         link.click();
+        
         setTimeout(function () {
           temporaryDisableHidingVideo(event);
           resolve();
         }, 0);
+      } else {
+        resolve();
       }
 
       restoreContextMenuPopup();
@@ -153,9 +159,13 @@ function restoreHidingHandlersOnLoadingMoreRecommendedVidoes(event) {
   }
 }
 
-function addRemoveHidingHandlers(add) {
-  const videos = document.querySelectorAll('ytd-rich-grid-renderer ytd-thumbnail');
+function getVideoThumbnails() {
+  return Array.from(document.querySelectorAll('ytd-rich-grid-renderer ytd-thumbnail'));
+}
 
+function addRemoveHidingHandlers(add) {
+  const videos = getVideoThumbnails();
+  
   videos.forEach(function (video) {
     if (add) {
       video.addEventListener('mouseover', hideVideo);
@@ -208,7 +218,7 @@ function addHideToggleButton() {
     const hideAllButton = appendToogleButton(recommendedLabelContainer, 'Hide All');
 
     hideAllButton.onclick = function () {
-      const videos = Array.from(document.querySelectorAll('ytd-rich-grid-renderer ytd-thumbnail'));
+      const videos = getVideoThumbnails();
 
       videos
         .reduce((p, video) => p.then(() => hideVideo({ target: video })), Promise.resolve())
