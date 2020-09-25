@@ -4,7 +4,7 @@
 // @include         http*://*youtube.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/youtube.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         1.10
+// @version         1.11
 // @grant           none
 // ==/UserScript==
 
@@ -32,6 +32,10 @@ function createElementFromHTML(htmlString) {
 
 function getElementByText(xpath, parent) {
   return document.evaluate(xpath, parent || document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+}
+
+function isHidden(element) {
+  return (element.offsetParent === null);
 }
 
 // ========================================= //
@@ -160,7 +164,7 @@ function restoreHidingHandlersOnLoadingMoreRecommendedVidoes(event) {
 }
 
 function getVideoThumbnails() {
-  return Array.from(document.querySelectorAll('ytd-rich-grid-renderer ytd-thumbnail'));
+  return Array.from(document.querySelectorAll('ytd-rich-grid-renderer ytd-thumbnail')).filter(element => isHidden(element) === false);
 }
 
 function addRemoveHidingHandlers(add) {
