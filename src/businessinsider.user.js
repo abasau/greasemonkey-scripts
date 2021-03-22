@@ -5,7 +5,7 @@
 // @include         https://www.insider.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/businessinsider.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.12
+// @version         0.15
 // @grant    				none
 // ==/UserScript==
 
@@ -45,6 +45,16 @@ function getFromLocalStorage (name) {
 
 function saveToLocalStorage (name, value) {
   localStorage[name] = JSON.stringify(value);
+};
+
+function hashCode(str) {
+  var hash = 0, i, chr;
+  for (i = 0; i < str.length; i++) {
+    chr   = str.charCodeAt(i);
+    hash  = ((hash << 5) - hash) + chr;
+    hash |= 0;
+  }
+  return hash;
 };
 
 // ===================================== //
@@ -102,6 +112,18 @@ addStyles (`
 
 body.tp-modal-open {
 	overflow: auto !important;
+}
+
+/* Hiding ad news */
+
+.studios-hp-module {
+	display: none !important;
+}
+
+/* Hiding sign up */
+
+.sticky-banner-active {
+	display: none !important;
 }
 
 /* From https://www.w3schools.com/howto/howto_css_modals.asp */
@@ -205,14 +227,16 @@ function removeItem(item) {
 function filterFeedItems(cutOffHight) {
   const feedItems = getFeedItems();
   
-  const hiddenFeedItemIds = getFromLocalStorage(storageVariableName) || [];
+  window.hiddenFeedItemIds = window.hiddenFeedItemIds || new Set(getFromLocalStorage(storageVariableName) || []);
+  
   const categories = getFromLocalStorage(categoryStorageVariableName) || [];
   const titles = getFromLocalStorage(titleStorageVariableName) || [];
   
   const clientWindowBottomY = window.scrollY + window.innerHeight;
 
   feedItems.forEach(item => {
-    if (hiddenFeedItemIds.includes(item.id)) {
+    var hash = hashCode(item.id);
+    if (window.hiddenFeedItemIds.has(hash)) {
       if (item.position.top > clientWindowBottomY) {
         hideItem(item);
         removeItem(item);
@@ -228,12 +252,12 @@ function filterFeedItems(cutOffHight) {
         removeItem(item);
       } else {
         hideItem(item);
-      }    
-      hiddenFeedItemIds.push(item.id);      
+      }
+      window.hiddenFeedItemIds.add(hash);      
     };
   });
   
-  saveToLocalStorage(storageVariableName, hiddenFeedItemIds);
+  saveToLocalStorage(storageVariableName, Array.from(window.hiddenFeedItemIds));
 };
 
 function getWindowHeight() {
