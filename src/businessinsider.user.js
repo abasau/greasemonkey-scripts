@@ -5,7 +5,7 @@
 // @include         https://www.insider.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/businessinsider.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.15
+// @version         0.17
 // @grant    				none
 // ==/UserScript==
 
@@ -114,9 +114,9 @@ body.tp-modal-open {
 	overflow: auto !important;
 }
 
-/* Hiding ad news */
+/* Hiding ad news and ads */
 
-.studios-hp-module {
+.studios-hp-module, .l-ad, .htl-ad-placeholder, .multi-newsletter-signup {
 	display: none !important;
 }
 
@@ -176,8 +176,11 @@ const titleStorageVariableName = 'hidden-feed-titles';
 function getFeedItems() {
   document.querySelectorAll('.tout-copy ol li a').forEach(element => element.classList.add(feedItemTitleClass));
   document.querySelectorAll('.js-feed-item .tout-title a.tout-title-link').forEach(element => element.classList.add(feedItemTitleClass));
+  document.querySelectorAll('.popular-divider-wrapper a.popular-title-link').forEach(element => element.classList.add(feedItemTitleClass));
+  
   document.querySelectorAll('.js-feed-item, .tout-copy ol li').forEach(element => element.classList.add(feedItemClass));
-
+	document.querySelectorAll('.popular-divider-wrapper').forEach(element => element.classList.add(feedItemClass));
+  
   const items = document.querySelectorAll(`.${feedItemClass}`);
   
   const data = Array.from(items)
