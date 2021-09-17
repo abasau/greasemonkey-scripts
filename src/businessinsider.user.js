@@ -5,7 +5,7 @@
 // @include         https://www.insider.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/businessinsider.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.17
+// @version         0.18
 // @grant    				none
 // ==/UserScript==
 
@@ -106,11 +106,11 @@ addStyles (`
 
 /* Hiding modal dialogs */
 
-.tp-backdrop.tp-active, .tp-modal {
+.tp-backdrop.tp-active, .tp-modal, .dialog-base {
 	display: none !important;
 }
 
-body.tp-modal-open {
+body.tp-modal-open, body.js-dialog-open {
 	overflow: auto !important;
 }
 
