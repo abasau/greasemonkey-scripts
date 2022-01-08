@@ -5,7 +5,7 @@
 // @include         https://www.insider.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/businessinsider.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.18
+// @version         0.19
 // @grant    				none
 // ==/UserScript==
 
@@ -264,7 +264,7 @@ function filterFeedItems(cutOffHight) {
 };
 
 function getWindowHeight() {
-  return document.body.offsetHeight;
+  return document.body.scrollHeight;
 }
 
 let scrollYNext = 0;
