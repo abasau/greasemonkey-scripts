@@ -4,7 +4,7 @@
 // @include         http*://*youtube.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/youtube.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         1.11
+// @version         1.12
 // @grant           none
 // ==/UserScript==
 
@@ -105,20 +105,6 @@ const styles = `
   }
 `;
 
-function enableHidingVideo(event) {
-  const thumbnail = event.target.closest('ytd-thumbnail');
-
-  thumbnail.removeEventListener('mouseleave', temporaryDisableHidingVideo);
-  thumbnail.addEventListener('mouseover', hideVideo);
-}
-
-function temporaryDisableHidingVideo(event) {
-  const thumbnail = event.target.closest('ytd-thumbnail');
-
-  thumbnail.removeEventListener('mouseover', hideVideo);
-  thumbnail.addEventListener('mouseleave', enableHidingVideo);
-}
-
 function hideContextMenuPopup() {
   document.querySelector('ytd-popup-container').style.display = 'none';
 }
@@ -131,55 +117,33 @@ function hideVideo(event) {
   return new Promise((resolve, reject) => {
     const parent = event.target.closest('ytd-rich-item-renderer');
     
-    const button = parent.querySelector('button#button');
-    
-    if (button) {
-      hideContextMenuPopup();
-    	button.click();
-    }
-    
-    setTimeout(function () {
-      const link = getElementByText("//yt-formatted-string[contains(text(),'Not interested')]", parent);
-      
-      if (link) {
-        link.click();
-        
-        setTimeout(function () {
-          temporaryDisableHidingVideo(event);
-          resolve();
-        }, 0);
-      } else {
-        resolve();
+    if (parent) {
+      const button = parent.querySelector('button#button');
+
+      if (button) {
+        hideContextMenuPopup();
+        button.click();
       }
 
-      restoreContextMenuPopup();
-    }, 0);
-  });
-}
+      setTimeout(function () {
+        const link = getElementByText("//yt-formatted-string[contains(text(),'Not interested')]", parent);
 
-function restoreHidingHandlersOnLoadingMoreRecommendedVidoes(event) {
-  if (event.detail && event.detail.actionName === 'yt-append-continuation-items-action') {
-    addRemoveHidingHandlers(true);
-  }
+        if (link) {
+          link.click();
+        }
+
+        restoreContextMenuPopup();
+
+        resolve();
+      }, 0);
+    } else {
+        resolve();
+    }
+  });
 }
 
 function getVideoThumbnails() {
   return Array.from(document.querySelectorAll('ytd-rich-grid-renderer ytd-thumbnail')).filter(element => isHidden(element) === false);
-}
-
-function addRemoveHidingHandlers(add) {
-  const videos = getVideoThumbnails();
-  
-  videos.forEach(function (video) {
-    if (add) {
-      video.addEventListener('mouseover', hideVideo);
-      window.addEventListener('yt-action', restoreHidingHandlersOnLoadingMoreRecommendedVidoes);
-    } else {
-      video.removeEventListener('mouseover', hideVideo);
-      video.removeEventListener('mouseleave', enableHidingVideo);
-      window.removeEventListener('yt-action', restoreHidingHandlersOnLoadingMoreRecommendedVidoes);
-    };
-  });
 }
 
 function removeAllToogleButtons() {
@@ -207,18 +171,11 @@ function appendToogleButton(container, label) {
 
 
 function addHideToggleButton() {
-  addRemoveHidingHandlers(false);
   removeAllToogleButtons();
 
   const recommendedLabelContainer = document.querySelector('#container #center');
 
   if (recommendedLabelContainer) {
-    const hideOnHoverButton = appendToogleButton(recommendedLabelContainer, 'Hide on Hover');
-
-    hideOnHoverButton.onclick = function () {
-      addRemoveHidingHandlers(this.checked);
-    };
-
     const hideAllButton = appendToogleButton(recommendedLabelContainer, 'Hide All');
 
     hideAllButton.onclick = function () {
