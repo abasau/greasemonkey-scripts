@@ -4,7 +4,7 @@
 // @include         http*://*youtube.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/youtube.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         1.12
+// @version         1.13
 // @grant           none
 // ==/UserScript==
 
@@ -183,7 +183,8 @@ function addHideToggleButton() {
 
       videos
         .reduce((p, video) => p.then(() => hideVideo({ target: video })), Promise.resolve())
-        .then(() => this.checked = false);
+        .then(() => this.checked = false)
+      	.then(() => document.querySelector('#logo-icon').click());
     };
   }
 }
