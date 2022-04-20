@@ -4,7 +4,7 @@
 // @include         http*://*youtube.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/youtube.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         1.13
+// @version         1.15
 // @grant           none
 // ==/UserScript==
 
@@ -179,12 +179,13 @@ function addHideToggleButton() {
     const hideAllButton = appendToogleButton(recommendedLabelContainer, 'Hide All');
 
     hideAllButton.onclick = function () {
-      const videos = getVideoThumbnails();
+      if (this.checked) {
+        const videos = getVideoThumbnails();
 
-      videos
-        .reduce((p, video) => p.then(() => hideVideo({ target: video })), Promise.resolve())
-        .then(() => this.checked = false)
-      	.then(() => document.querySelector('#logo-icon').click());
+        videos.reduce((p, video) => p.then(() => hideVideo({ target: video })), Promise.resolve());
+      } else {
+      	document.querySelector('#logo-icon').click();
+      }
     };
   }
 }
@@ -197,3 +198,68 @@ addStyles(styles, 'toggle');
 
 resetToggleButtonOnNavigation();
 addHideToggleButton();
+
+
+function executeInPageContext(func) {
+  window.eval(`(${func})()`);
+}
+
+executeInPageContext(() => document.addEventListener("yt-navigate-finish", function(){
+  
+  function getFromLocalStorage (name) {
+    return localStorage[name] ? JSON.parse(localStorage[name]) : null;
+  };
+
+  function saveToLocalStorage (name, value) {
+    localStorage[name] = JSON.stringify(value);
+  };
+
+  const mp = document.getElementById("movie_player");
+  
+  if (!mp) return;
+  
+  const authorName = mp.getVideoData().author;
+  //console.log( mp );
+  
+  window.addEventListener("storage", onStorageChange);
+
+  const storageVariableName = "channelPlaybackRates";
+  
+  function getChannelPlaybackRates() {
+    return new Map(getFromLocalStorage(storageVariableName) || []);
+  }
+  
+  function saveChannelPlaybackRates(rates) {
+    saveToLocalStorage(storageVariableName, Array.from(rates.entries()));
+  }
+
+  function onStorageChange(ev) {
+    if (ev.key == storageVariableName) {
+      syncPlaybackRate();
+    }
+  }
+  
+  function savePlaybackRates() {
+    const playbackRates = getChannelPlaybackRates();
+    const currentPlaybackRate = mp.getPlaybackRate();
+    playbackRates.set(authorName, currentPlaybackRate);
+    console.log(playbackRates);
+    saveChannelPlaybackRates(playbackRates);
+    //console.log('Saving: ' + currentPlaybackRate);
+  }
+  
+  function syncPlaybackRate() {
+    const playbackRates = getChannelPlaybackRates();
+    const playbackRate = playbackRates.get(authorName);
+    playbackRate && mp.setPlaybackRate(playbackRate);
+    //console.log('Restoring: ' + playbackRate);
+  }
+  
+  document.getElementsByTagName('video').item(0).onratechange = function(data) {
+    //console.log(data);
+    savePlaybackRates();
+  }
+  
+  syncPlaybackRate();
+
+}));
