@@ -5,21 +5,24 @@
 // @include         https://www.insider.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/businessinsider.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.19
+// @version         0.20
 // @grant    				none
 // ==/UserScript==
 
+const debugMode = false;
+
 // ===================================== //
 
-function addStyles (styles) {
-  const existing = document.getElementById('custom-style');
+function addStyles (styles, name) {
+  const id = `custom-style-${name}`;
+  const existing = document.getElementById(id);
 
   if (existing) existing.remove();
 
   const styleSheet = document.createElement("style")
   styleSheet.type = "text/css";
   styleSheet.innerText = styles;
-  styleSheet.id = 'custom-style';
+  styleSheet.id = id;
 
   document.head.appendChild(styleSheet);
 };
@@ -61,6 +64,8 @@ function hashCode(str) {
 
 const feedItemClass = "hideable-feed-item";
 const feedItemTitleClass = "hideable-feed-item-title";
+const premiumClass = "bi-premium-icon";
+const categoryClass = "tout-tag-link";
 const hiddenClass = "hidden-feed-item";
 const removedClass = "removed-feed-item";
 
@@ -165,13 +170,24 @@ body.tp-modal-open, body.js-dialog-open {
   cursor: pointer;
 }
 
-`);
+`, "main");
 
 // ===================================== //
 
 const storageVariableName = 'hidden-feed-items';
 const categoryStorageVariableName = 'hidden-feed-categories';
 const titleStorageVariableName = 'hidden-feed-titles';
+
+if (debugMode) {
+  addStyles (`
+    .${feedItemClass} {
+      border: 2px solid red !important;
+    }
+
+    .${feedItemTitleClass}, .${premiumClass}, .${categoryClass} {
+      border: 2px solid #006400 !important;
+    }`, "debug");
+};
 
 function getFeedItems() {
   document.querySelectorAll('.tout-copy ol li a').forEach(element => element.classList.add(feedItemTitleClass));
@@ -199,8 +215,8 @@ function getFeedItems() {
         relatedElements = [];
       }
 
-	    const primeElement = container.querySelector('.bi-prime-icon');
-      const categoryElement = container.querySelector('.tout-tag-link');
+	    const primeElement = container.querySelector(`.${premiumClass}`);
+      const categoryElement = container.querySelector(`.${categoryClass}`);
       
       const prime = !!primeElement;
       const category = categoryElement ? categoryElement.innerText.trim() : "";
@@ -212,7 +228,10 @@ function getFeedItems() {
       return { prime, category, title, id, position, element, relatedElements };
     });
   
-  //console.log(data);
+  
+  if (debugMode) {
+  	console.log(data);
+  }
   
   return data;
 };
@@ -260,7 +279,9 @@ function filterFeedItems(cutOffHight) {
     };
   });
   
-  saveToLocalStorage(storageVariableName, Array.from(window.hiddenFeedItemIds));
+  if (!debugMode) {
+  	saveToLocalStorage(storageVariableName, Array.from(window.hiddenFeedItemIds));
+  }
 };
 
 function getWindowHeight() {
