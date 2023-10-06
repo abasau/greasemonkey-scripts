@@ -5,7 +5,7 @@
 // @include         https://www.insider.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/businessinsider.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         0.20
+// @version         0.22
 // @grant    				none
 // ==/UserScript==
 
@@ -131,6 +131,12 @@ body.tp-modal-open, body.js-dialog-open {
 	display: none !important;
 }
 
+/* Hiding most popular, videos, etc. */
+
+.most-popular, .video-module, .newsletter-signup {
+	display: none !important;
+}
+
 /* From https://www.w3schools.com/howto/howto_css_modals.asp */
 
 .modal {
@@ -184,18 +190,25 @@ if (debugMode) {
       border: 2px solid red !important;
     }
 
-    .${feedItemTitleClass}, .${premiumClass}, .${categoryClass} {
-      border: 2px solid #006400 !important;
+    .${feedItemTitleClass} {
+      border: 2px solid black !important;
+    }
+
+    .${premiumClass}, .${categoryClass} {
+      border: 2px solid lightgreen !important;
     }`, "debug");
 };
 
 function getFeedItems() {
-  document.querySelectorAll('.tout-copy ol li a').forEach(element => element.classList.add(feedItemTitleClass));
-  document.querySelectorAll('.js-feed-item .tout-title a.tout-title-link').forEach(element => element.classList.add(feedItemTitleClass));
-  document.querySelectorAll('.popular-divider-wrapper a.popular-title-link').forEach(element => element.classList.add(feedItemTitleClass));
+  console.log('reading...')
   
   document.querySelectorAll('.js-feed-item, .tout-copy ol li').forEach(element => element.classList.add(feedItemClass));
 	document.querySelectorAll('.popular-divider-wrapper').forEach(element => element.classList.add(feedItemClass));
+  document.querySelectorAll('.tout').forEach(element => element.classList.add(feedItemClass));
+  document.querySelectorAll('.quick-link').forEach(element => element.classList.add(feedItemClass));
+  
+  document.querySelectorAll(`.${feedItemClass} a.tout-title-link`).forEach(element => element.classList.add(feedItemTitleClass));
+  document.querySelectorAll(`.${feedItemClass} a[data-analytics-product-module='hp_tout_clicks']:not(.two-column-tout-image)`).forEach(element => element.classList.add(feedItemTitleClass));
   
   const items = document.querySelectorAll(`.${feedItemClass}`);
   
@@ -225,7 +238,7 @@ function getFeedItems() {
       const title = titleLinkElement ? titleLinkElement.innerText.trim() : "";
       const position = { top: getAbsoluteTopPosition(element), hight: element.clientHeight, width: element.clientWidth };
 
-      return { prime, category, title, id, position, element, relatedElements };
+      return { prime, category, title, id, position, element, relatedElements, titleLinkElement };
     });
   
   
@@ -314,9 +327,9 @@ addHtmlToBody(`
     <span id="filter-dialog-close" class="close">&times;</span>
     <div>
       <h5>Filter Category</h5>
-      <textarea id="filter-dialog-categories" rows="5" cols="150"></textarea>
+      <textarea id="filter-dialog-categories" rows="5" cols="118"></textarea>
       <h5>Filter Text</h5>
-      <textarea id="filter-dialog-titles" rows="5" cols="150"></textarea>
+      <textarea id="filter-dialog-titles" rows="5" cols="118"></textarea>
     </div>
   </div>
 
@@ -346,6 +359,8 @@ const closeModal = function() {
   saveToLocalStorage(titleStorageVariableName, titles);
   
   modal.style.display = "none";
+  
+  filterFeedItems(scrollYNext - 100);
 };
 
 closeLink.onclick = closeModal;
