@@ -200,8 +200,6 @@ if (debugMode) {
 };
 
 function getFeedItems() {
-  console.log('reading...')
-  
   document.querySelectorAll('.js-feed-item, .tout-copy ol li').forEach(element => element.classList.add(feedItemClass));
 	document.querySelectorAll('.popular-divider-wrapper').forEach(element => element.classList.add(feedItemClass));
   document.querySelectorAll('.tout').forEach(element => element.classList.add(feedItemClass));
@@ -238,7 +236,7 @@ function getFeedItems() {
       const title = titleLinkElement ? titleLinkElement.innerText.trim() : "";
       const position = { top: getAbsoluteTopPosition(element), hight: element.clientHeight, width: element.clientWidth };
 
-      return { prime, category, title, id, position, element, relatedElements, titleLinkElement };
+      return { prime, category, title, id, position, element, relatedElements };
     });
   
   
