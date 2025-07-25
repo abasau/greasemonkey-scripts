@@ -4,7 +4,7 @@
 // @include         http*://*youtube.tld/watch*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/youtube.playback.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         1.1
+// @version         1.2
 // @grant           none
 // ==/UserScript==
 
@@ -28,8 +28,11 @@ executeInPageContext(() => document.addEventListener("yt-navigate-finish", funct
   
   if (!mp) return;
   
+  console.log('Player:');
+  console.log(mp);
+  
   const authorName = mp.getVideoData().author;
-  //console.log( mp );
+  console.log('Author: ' + authorName);
   
   window.addEventListener("storage", onStorageChange);
 
@@ -55,18 +58,22 @@ executeInPageContext(() => document.addEventListener("yt-navigate-finish", funct
     playbackRates.set(authorName, currentPlaybackRate);
     console.log(playbackRates);
     saveChannelPlaybackRates(playbackRates);
-    //console.log('Saving: ' + currentPlaybackRate);
+    console.log('Saving: ' + currentPlaybackRate);
   }
   
   function syncPlaybackRate() {
     const playbackRates = getChannelPlaybackRates();
+  
+    console.log('Playback Rates:');
+    console.log(playbackRates);
+    
     const playbackRate = playbackRates.get(authorName);
     playbackRate && mp.setPlaybackRate(playbackRate);
-    //console.log('Restoring: ' + playbackRate);
+    console.log('Restoring: ' + playbackRate);
   }
   
   document.getElementsByTagName('video').item(0).onratechange = function(data) {
-    //console.log(data);
+    console.log(data);
     savePlaybackRates();
   }
   
