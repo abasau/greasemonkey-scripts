@@ -4,11 +4,13 @@
 // @include         http*://*youtube.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/youtube.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         1.15
+// @version         1.16
 // @grant           none
 // ==/UserScript==
 
 // ========================================= //
+
+const debugMode = false;
 
 function addStyles(styles, postfix) {
   const existing = document.getElementById('custom-style');
@@ -30,7 +32,7 @@ function createElementFromHTML(htmlString) {
   return div.firstChild;
 }
 
-function getElementByText(xpath, parent) {
+function getElementByXPath(xpath, parent) {
   return document.evaluate(xpath, parent || document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 }
 
@@ -116,34 +118,43 @@ function restoreContextMenuPopup() {
 function hideVideo(event) {
   return new Promise((resolve, reject) => {
     const parent = event.target.closest('ytd-rich-item-renderer');
+    console.debug("Parent")
+    console.debug(parent);
     
     if (parent) {
-      const button = parent.querySelector('button#button');
+      const button = parent.querySelector('button[aria-label="More actions"]');
+      console.debug("Button")
+      console.debug(button);
 
       if (button) {
         hideContextMenuPopup();
         button.click();
-      }
 
-      setTimeout(function () {
-        const link = getElementByText("//yt-formatted-string[contains(text(),'Not interested')]", parent);
+        // Click Not Interested after waiting for the menu to show up
+        setTimeout(function () {
+          const link = getElementByXPath("//yt-list-item-view-model[contains(.,'Not interested')]", document.querySelector('tp-yt-iron-dropdown'));
+          console.debug("Link")
+          console.debug(link);
 
-        if (link) {
-          link.click();
-        }
+          if (link) {
+            link.click();
+          }
 
-        restoreContextMenuPopup();
+          restoreContextMenuPopup();
 
+          resolve();
+        }, 0);
+      } else {
         resolve();
-      }, 0);
+      };
     } else {
-        resolve();
-    }
+      resolve();
+    };
   });
 }
 
 function getVideoThumbnails() {
-  return Array.from(document.querySelectorAll('ytd-rich-grid-renderer ytd-thumbnail')).filter(element => isHidden(element) === false);
+  return Array.from(document.querySelectorAll('yt-thumbnail-view-model')).filter(element => isHidden(element) === false);
 }
 
 function removeAllToogleButtons() {
@@ -183,8 +194,6 @@ function addHideToggleButton() {
         const videos = getVideoThumbnails();
 
         videos.reduce((p, video) => p.then(() => hideVideo({ target: video })), Promise.resolve());
-      } else {
-      	document.querySelector('#logo-icon').click();
       }
     };
   }
@@ -198,68 +207,3 @@ addStyles(styles, 'toggle');
 
 resetToggleButtonOnNavigation();
 addHideToggleButton();
-
-
-function executeInPageContext(func) {
-  window.eval(`(${func})()`);
-}
-
-executeInPageContext(() => document.addEventListener("yt-navigate-finish", function(){
-  
-  function getFromLocalStorage (name) {
-    return localStorage[name] ? JSON.parse(localStorage[name]) : null;
-  };
-
-  function saveToLocalStorage (name, value) {
-    localStorage[name] = JSON.stringify(value);
-  };
-
-  const mp = document.getElementById("movie_player");
-  
-  if (!mp) return;
-  
-  const authorName = mp.getVideoData().author;
-  //console.log( mp );
-  
-  window.addEventListener("storage", onStorageChange);
-
-  const storageVariableName = "channelPlaybackRates";
-  
-  function getChannelPlaybackRates() {
-    return new Map(getFromLocalStorage(storageVariableName) || []);
-  }
-  
-  function saveChannelPlaybackRates(rates) {
-    saveToLocalStorage(storageVariableName, Array.from(rates.entries()));
-  }
-
-  function onStorageChange(ev) {
-    if (ev.key == storageVariableName) {
-      syncPlaybackRate();
-    }
-  }
-  
-  function savePlaybackRates() {
-    const playbackRates = getChannelPlaybackRates();
-    const currentPlaybackRate = mp.getPlaybackRate();
-    playbackRates.set(authorName, currentPlaybackRate);
-    console.log(playbackRates);
-    saveChannelPlaybackRates(playbackRates);
-    //console.log('Saving: ' + currentPlaybackRate);
-  }
-  
-  function syncPlaybackRate() {
-    const playbackRates = getChannelPlaybackRates();
-    const playbackRate = playbackRates.get(authorName);
-    playbackRate && mp.setPlaybackRate(playbackRate);
-    //console.log('Restoring: ' + playbackRate);
-  }
-  
-  document.getElementsByTagName('video').item(0).onratechange = function(data) {
-    //console.log(data);
-    savePlaybackRates();
-  }
-  
-  syncPlaybackRate();
-
-}));
