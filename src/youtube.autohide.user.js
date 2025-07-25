@@ -2,7 +2,7 @@
 // @name            YouTube.com mass hiding of recommended videos
 // @description     Provides an option on YouTube to mass-hide recommended videos
 // @include         http*://*youtube.tld/*
-// @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/youtube.user.js
+// @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/youtube.autohide.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
 // @version         1.16
 // @grant           none
