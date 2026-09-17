@@ -4,13 +4,23 @@
 // @include         http*://*youtube.tld/*
 // @downloadURL     https://github.com/abasau/greasemonkey-scripts/raw/master/src/youtube.autohide.user.js
 // @homepageURL     https://github.com/abasau/greasemonkey-scripts
-// @version         1.16
+// @version         1.19
 // @grant           none
 // ==/UserScript==
 
 // ========================================= //
 
 const debugMode = false;
+
+const selectors = {
+  actionButton: 'button[aria-label="More actions"], button[aria-label="Action menu"]',
+  popupContainer: 'ytd-popup-container',
+  recommendedLabelContainer: '#container #center',
+  thumbnail: 'ytd-thumbnail, yt-thumbnail-view-model',
+  toggleContainer: '.switch-container',
+  video: 'ytd-rich-item-renderer',
+  menuItemXPath: "//yt-formatted-string[contains(.,'Not interested')][@role='menuitem'] | //yt-list-item-view-model[contains(.,'Not interested')][@role='menuitem'] | //yt-list-item-view-model[contains(.,'Not interested')][@role='presentation']",
+};
 
 function addStyles(styles, postfix) {
   const existing = document.getElementById('custom-style');
@@ -38,6 +48,12 @@ function getElementByXPath(xpath, parent) {
 
 function isHidden(element) {
   return (element.offsetParent === null);
+}
+
+function highlightDebugElement(element) {
+  if (debugMode && element) {
+    element.style.outline = '3px solid #ff4d4d';
+  }
 }
 
 // ========================================= //
@@ -108,35 +124,42 @@ const styles = `
 `;
 
 function hideContextMenuPopup() {
-  document.querySelector('ytd-popup-container').style.display = 'none';
+  document.querySelector(selectors.popupContainer).style.display = 'none';
 }
 
 function restoreContextMenuPopup() {
-  document.querySelector('ytd-popup-container').style.display = 'block';
+  document.querySelector(selectors.popupContainer).style.display = 'block';
 }
 
 function hideVideo(event) {
   return new Promise((resolve, reject) => {
-    const parent = event.target.closest('ytd-rich-item-renderer');
+    const parent = event.target.closest(selectors.video);
+    highlightDebugElement(parent);
     console.debug("Parent")
     console.debug(parent);
     
     if (parent) {
-      const button = parent.querySelector('button[aria-label="More actions"]');
+      const button = parent.querySelector(selectors.actionButton);
+      highlightDebugElement(button);
       console.debug("Button")
       console.debug(button);
 
       if (button) {
-        hideContextMenuPopup();
+        if (!debugMode){
+          hideContextMenuPopup();
+        }
+        
         button.click();
 
         // Click Not Interested after waiting for the menu to show up
         setTimeout(function () {
-          const link = getElementByXPath("//yt-list-item-view-model[contains(.,'Not interested')]", document.querySelector('tp-yt-iron-dropdown'));
+          const dropdown = document.querySelector('body');
+          const link = getElementByXPath(selectors.menuItemXPath, dropdown);
+          highlightDebugElement(link);
           console.debug("Link")
           console.debug(link);
 
-          if (link) {
+          if (link && !debugMode) {
             link.click();
           }
 
@@ -154,11 +177,11 @@ function hideVideo(event) {
 }
 
 function getVideoThumbnails() {
-  return Array.from(document.querySelectorAll('yt-thumbnail-view-model')).filter(element => isHidden(element) === false);
+  return Array.from(document.querySelectorAll(selectors.thumbnail)).filter(element => isHidden(element) === false);
 }
 
 function removeAllToogleButtons() {
-  const existingToggles = document.querySelectorAll(`.${buttonContainerClass}`);
+  const existingToggles = document.querySelectorAll(selectors.toggleContainer);
 
   existingToggles.forEach(function (existingToggle) {
     existingToggle.remove();
@@ -184,7 +207,7 @@ function appendToogleButton(container, label) {
 function addHideToggleButton() {
   removeAllToogleButtons();
 
-  const recommendedLabelContainer = document.querySelector('#container #center');
+  const recommendedLabelContainer = document.querySelector(selectors.recommendedLabelContainer);
 
   if (recommendedLabelContainer) {
     const hideAllButton = appendToogleButton(recommendedLabelContainer, 'Hide All');
